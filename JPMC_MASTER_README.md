@@ -33,7 +33,7 @@ Comprehensive quantitative research portfolio spanning **two critical banking di
 
 ### Project 1: Natural Gas Storage Contract Pricing
 
-**Notebook:** [`JPMC_Gas_Contracts.ipynb`]([./JPMC_Gas_Contracts.ipynb](https://github.com/thylinao1/JPMC-Quantitative-Researcher/blob/main/JPMC%20Gas%20Contracts.ipynb))  
+**Notebook:** [`JPMC_Gas_Contracts.ipynb`]
 **Domain:** Commodities Trading | **Techniques:** Time Series, Derivatives Pricing
 
 #### Problem Statement
@@ -73,7 +73,7 @@ f(t) = a + b·t + c·t² + d·sin(2πt/12) + e·cos(2πt/12)
 
 ### Project 2: Credit Risk Analytics Suite
 
-**Notebooks:** [`Risk_Estimation.ipynb`](./Risk_Estimation.ipynb) | [`Bucket_FICO_scores.ipynb`](./Bucket_FICO_scores.ipynb)  
+**Notebooks:** [`Risk_Estimation.ipynb`] | [`Bucket_FICO_scores.ipynb`]
 **Domain:** Retail Banking Risk | **Techniques:** XGBoost, Dynamic Programming
 
 ---
@@ -292,19 +292,6 @@ jupyter notebook Bucket_FICO_scores.ipynb
 4. **Business Context:** Every model tied to P&L or regulatory impact
 5. **End-to-End:** Data extraction → model development → business insights
 
----
-
-## 👤 Author
-
-**[Your Name]**  
-*Quantitative Researcher | Machine Learning Engineer | Financial Modeling*
-
-📧 [email@example.com](mailto:email@example.com)  
-💼 [LinkedIn](your-linkedin-url)  
-🌐 [Portfolio](your-portfolio-url)  
-🐙 [GitHub](your-github-url)
-
----
 
 ## 🙏 Acknowledgments
 
@@ -313,16 +300,5 @@ jupyter notebook Bucket_FICO_scores.ipynb
 **Charlie (Risk Associate)** – Credit modeling requirements  
 **Open Source Community** – XGBoost, Scikit-learn, SciPy teams
 
----
-
-<div align="center">
-
-### ⭐ If this work resonates with you, please star the repository! ⭐
-
-**Built with 📊 Quantitative Finance | 🤖 Machine Learning | 🧮 Optimization**
-
-</div>
-
----
 
 *Last Updated: October 2024 | JPMorgan Chase Quantitative Research Program*
