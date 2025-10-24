@@ -583,24 +583,10 @@ import seaborn as sns
 ✅ Portfolio risk aggregation  
 ✅ Basel III framework
 
----
-
-## 📞 Support & Contact
-
-For questions about this project or collaboration:
-
-**Author:** [Your Name]  
-**Email:** [your-email@example.com]  
-**LinkedIn:** [your-linkedin-url]
-
----
-
 ## 🙏 Acknowledgments
 
 - **JPMorgan Chase** – Virtual experience program
 - **Charlie (Risk Associate)** – Business requirements
 - **XGBoost Community** – Machine learning tools
 
----
 
-*This project is for educational purposes. Production credit models require additional validation, regulatory approval, and ongoing monitoring.*
