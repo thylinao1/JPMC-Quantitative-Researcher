@@ -415,17 +415,6 @@ from datetime import datetime
 ✅ Production-ready function design  
 ✅ Clear documentation and examples
 
----
-
-## 📞 Support & Contact
-
-For questions about this model or collaboration opportunities:
-
-**Author:** [Your Name]  
-**Email:** [your-email@example.com]  
-**LinkedIn:** [your-linkedin-url]
-
----
 
 ## 🙏 Acknowledgments
 
@@ -433,6 +422,3 @@ For questions about this model or collaboration opportunities:
 - **Alex (VP, Commodities)** – Business requirements and contract specifications
 - **SciPy Community** – Optimization and statistical tools
 
----
-
-*This model is for educational and portfolio demonstration purposes. Real-world trading requires additional risk management, regulatory compliance, and operational controls.*
