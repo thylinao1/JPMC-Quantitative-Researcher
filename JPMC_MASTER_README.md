@@ -33,7 +33,7 @@ Comprehensive quantitative research portfolio spanning **two critical banking di
 
 ### Project 1: Natural Gas Storage Contract Pricing
 
-**Notebook:** [`JPMC_Gas_Contracts.ipynb`](./JPMC_Gas_Contracts.ipynb)  
+**Notebook:** [`JPMC_Gas_Contracts.ipynb`]([./JPMC_Gas_Contracts.ipynb](https://github.com/thylinao1/JPMC-Quantitative-Researcher/blob/main/JPMC%20Gas%20Contracts.ipynb))  
 **Domain:** Commodities Trading | **Techniques:** Time Series, Derivatives Pricing
 
 #### Problem Statement
