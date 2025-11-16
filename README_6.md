@@ -225,29 +225,10 @@ RL optimal strategy:
 
 The agent discovers that multiple small arbitrage opportunities compound to far exceed single seasonal trade.
 
-### Key Findings
+### Findings
 - Sequential optimization outperforms static rules
 - RL naturally discovers multi-cycle trading patterns
 - Price forecasting + decision optimization is more powerful than forecasting alone
-
----
-
-## Technical Implementation
-
-### Languages and Libraries
-- **Core**: Python 3.10+
-- **Data Processing**: Pandas, NumPy
-- **Machine Learning**: Scikit-learn, XGBoost
-- **Optimization**: SciPy (curve fitting), custom DP implementation
-- **Explainability**: SHAP
-- **Visualization**: Matplotlib, Seaborn
-- **Statistical Testing**: SciPy stats
-
-### Code Quality
-- Modular function design
-- Input validation and error handling
-- Clear documentation and comments
-- Reproducible results (random seeds set)
 
 ---
 
@@ -302,7 +283,7 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 
 ---
 
-## Key Learnings
+## Learnings
 
 ### Technical Skills
 1. **Data Quality First**: Diagnosing synthetic data before trusting results
@@ -316,12 +297,6 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 2. **Scorecard Development**: WoE, IV, monotonicity constraints
 3. **Commodities**: Seasonal patterns, storage economics, arbitrage
 4. **Decision Theory**: Asymmetric costs, threshold optimization
-
-### Professional Development
-1. **Honest Assessment**: Acknowledging limitations strengthens credibility
-2. **Methodology Over Metrics**: Process matters more than impressive numbers
-3. **Business Translation**: Connecting ML metrics to P&L impact
-4. **Critical Thinking**: Questioning results that seem too good
 
 ---
 
@@ -349,41 +324,9 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 
 ---
 
-## How to Run
-
-### Prerequisites
-```bash
-pip install pandas numpy scipy scikit-learn xgboost shap matplotlib seaborn
-```
-
-### Execution
-```bash
-# Credit risk analysis
-jupyter notebook Risk_Estimation.ipynb
-
-# FICO bucketing
-jupyter notebook Bucket_FICO_scores.ipynb
-
-# Gas trading
-jupyter notebook JPMC_Gas_Contracts.ipynb
-```
-
-Each notebook is self-contained with markdown explanations throughout.
-
----
-
 ## About This Project
 
 This portfolio was completed as part of JPMorgan Chase's Quantitative Research virtual experience program. The program provides specifications and synthetic datasets; the implementation, analysis, and extensions are original work.
-
-**What distinguishes this submission:**
-- Critical assessment of data quality (didn't accept 0.9998 AUC at face value)
-- Statistical validation beyond basic metrics
-- Economic decision framework connecting models to business outcomes
-- Advanced algorithms (dynamic programming, reinforcement learning) beyond program requirements
-- Honest acknowledgment of limitations throughout
-
-The goal was not to produce impressive numbers, but to demonstrate the quantitative reasoning and methodological rigor expected of professional quant researchers.
 
 ---
 
