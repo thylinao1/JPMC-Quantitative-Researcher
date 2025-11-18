@@ -134,7 +134,7 @@ Both AIC and BIC select 7 buckets as optimal, balancing fit against complexity.
 
 IV = 0.77 (strong predictive power, >0.3 threshold)
 
-Weight of Evidence progression: -2.1 → -1.3 → -0.8 → -0.4 → +0.2 → +0.8 → +2.0
+Weight of Evidence progression: -2.1 -> -1.3 -> -0.8 -> -0.4 -> +0.2 -> +0.8 -> +2.0
 
 Monotonic WoE confirms good risk separation for scorecard development.
 
