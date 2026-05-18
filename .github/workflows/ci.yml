@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements.txt
+
+      - name: Install project (editable) with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run pytest
+        run: pytest -v
+
+      - name: Validate notebooks parse as nbformat v4
+        run: |
+          python - <<'PY'
+          import sys, glob
+          import nbformat
+          nbs = sorted(glob.glob("notebooks/*.ipynb"))
+          failed = []
+          for path in nbs:
+              try:
+                  nb = nbformat.read(path, as_version=4)
+                  nbformat.validate(nb)
+                  print(f"OK   {path}  ({len(nb.cells)} cells)")
+              except Exception as exc:
+                  failed.append((path, exc))
+                  print(f"FAIL {path}: {exc}")
+          if failed:
+              sys.exit(1)
+          PY
