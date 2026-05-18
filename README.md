@@ -72,10 +72,10 @@ modelling regime.
 
 - Logistic Regression: 0.783 AUC (+/- 0.013)
 - Random Forest: 0.729 AUC (+/- 0.010)
-- XGBoost: 0.740 AUC (+/- 0.012)
+- XGBoost: 0.730 AUC (+/- 0.011)
 
 A paired t-test on the 5-fold AUC differences (LR vs XGBoost)
-gives p = 0.0004. Logistic regression wins on this restricted
+gives p = 0.0003. Logistic regression wins on this restricted
 feature set.
 
 **Calibration (Brier)**
@@ -197,7 +197,7 @@ Results for 7 buckets:
 
 **Bootstrap confidence intervals**
 
-Bootstrap (100 resamples) on the 7-bucket optimal boundaries (these are the numbers printed by the notebook):
+Bootstrap (50 resamples) on the 7-bucket optimal boundaries (these are the numbers printed by the notebook):
 
 | Boundary | Point | 95% CI       |
 | -------- | ----- | ------------ |
@@ -219,10 +219,6 @@ Middle boundaries have substantial uncertainty, suggesting the optimal configura
 - Bucket 9: 37.50% default rate (small sample anomaly)
 
 Conclusion: More granularity introduces instability without improving discrimination.
-
-**Model Selection (AIC/BIC)**
-
-Both AIC and BIC select 7 buckets as optimal, balancing fit against complexity.
 
 **Information Value**
 
@@ -336,8 +332,8 @@ for continuous control of inventory.
   in-sample.
 - The simplest defensible baseline (one annual seasonal swing) is a
   high bar on a small dataset.
-- The corrected per-unit storage cost convention is shared between
-  the env and the baselines so the comparison is on equal footing.
+- The per-unit storage cost convention is shared between the env
+  and the baselines so the comparison is on equal footing.
 
 
 ---
@@ -363,14 +359,16 @@ for continuous control of inventory.
 │   ├── credit/              # loader, profit/threshold eval, operational profile
 │   └── gas/                 # loader, baselines, env, q-learning
 └── tests/                   # 47 pytest tests covering src/
+```
 
 ---
 
 ## Limitations
 
 ### Data
-- The loan dataset is synthetic. Headline numbers are illustrations of
-  the methodology, not estimates of production performance.
+- The loan dataset is synthetic. Headline dollar amounts come from
+  this synthetic data and inherit its limitations; they are not
+  estimates of production performance.
 - The 48-month gas series limits any forecast or trading claim to its
   observed sample.
 - The FICO bucketing inherits the same synthetic credit data; the
