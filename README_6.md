@@ -16,58 +16,119 @@ Central theme: rigorous methodology over impressive metrics. Each project includ
 ## Project 1: Credit Risk Modeling
 
 ### Objective
-Build probability of default (PD) model for retail loan portfolio and translate ML predictions into business decisions.
+
+Build a probability-of-default model on the Forage retail loan
+dataset, then translate the probabilities into a credit-approval
+threshold under an asymmetric cost matrix. Report the value of the
+threshold relocation on a held-out test fold (not on the fold used
+to pick the threshold).
 
 ### Data Assessment
-Initial analysis revealed critical issue: dataset is synthetic and trivially separable.
-- Simple logistic regression achieves 1.0000 AUC (perfect discrimination)
-- `credit_lines_outstanding` correlates 0.86 with default (unrealistic)
-- Real-world credit models typically achieve 0.65-0.75 AUC
 
-Rather than ignoring this, the analysis proceeds on two tracks:
-1. Full features: demonstrates synthetic nature
-2. Restricted features (income, FICO, employment, loan amount): yields realistic 0.78 AUC
+The full dataset is trivially separable:
+
+- Simple logistic regression achieves 1.0000 AUC on all features.
+- `credit_lines_outstanding` correlates 0.86 with default.
+- Real-world credit models typically achieve 0.65 to 0.75 AUC.
+
+This is consistent with a synthetic dataset designed for an
+educational program. The notebook documents the diagnosis and
+restricts the feature set to `income`, `years_employed`,
+`fico_score`, `loan_amt_outstanding` to obtain a more realistic
+modelling regime.
 
 ### Methodology
 
-**Model Comparison with Statistical Testing**
-- Logistic Regression: 0.783 AUC (±0.013)
-- Random Forest: 0.729 AUC (±0.010)
-- XGBoost: 0.740 AUC (±0.012)
+**Model comparison with paired t-test on CV folds**
 
-Paired t-test confirms logistic regression superiority (p=0.0004). Simpler model wins when relationships are linear and features are limited.
+- Logistic Regression: 0.783 AUC (+/- 0.013)
+- Random Forest: 0.729 AUC (+/- 0.010)
+- XGBoost: 0.740 AUC (+/- 0.012)
 
-**Calibration Analysis**
-- Brier score: 0.126
-- Calibration curve tracks diagonal well
-- Slight underconfidence in 0.3-0.5 probability range
-- Critical for credit risk: poorly calibrated models lead to mispriced loans
+A paired t-test on the 5-fold AUC differences (LR vs XGBoost)
+gives p = 0.0004. Logistic regression wins on this restricted
+feature set.
+
+**Calibration (Brier)**
+
+Brier score on the LR model: 0.126. The calibration curve tracks
+the diagonal with slight underconfidence in the 0.3 to 0.5 region.
 
 **Explainability (SHAP)**
-- FICO score: highest impact
-- Years employed: second highest
-- All feature effects economically coherent (higher FICO → lower risk)
 
-**Economic Decision Optimization**
+LinearExplainer on the LR model. FICO score has the largest
+average absolute SHAP value; loan amount has the next largest.
+Directional effects are economically coherent (higher FICO -> lower
+risk).
 
-Key insight: ML optimization (AUC) ≠ business optimization (profit)
+**Economic decision optimisation: three-way split**
 
-Cost assumptions:
-- Loan amount: $10,000
-- Profit margin on good loan: 15%
-- Loss given default: 90%
+The original analysis swept thresholds on the same test fold that
+produced the headline profit number, which selects the empirically
+best operating point and reports its in-sample profit. The
+corrected protocol uses a three-way stratified split:
 
-Results:
-- Default threshold (0.50): -$354,000 expected profit
-- Optimal threshold (0.19): +$135,000 expected profit
-- Improvement: $489,000
+- Train (60%, n = 6000): fit the logistic regression.
+- Threshold-select (20%, n = 2000): sweep thresholds and pick the
+  one that maximises profit on this fold alone.
+- Final test (20%, n = 2000): report profit at the chosen
+  threshold. No threshold tuning touches this fold.
 
-Sensitivity analysis shows optimal threshold ranges from 0.18 to 0.34 depending on cost assumptions.
+The split, profit function, threshold optimiser, and bootstrap CIs
+live under `src/credit/` with unit tests at `tests/test_credit_*.py`.
 
-### Key Findings
-- Simpler models can outperform complex ones on limited features
-- Classification threshold optimization is as important as model selection
-- Calibration matters as much as discrimination for risk pricing
+**Cost convention (single source of truth, used by `src.credit.eval`)**
+
+```
+loan_amount           = $10,000
+profit_margin         = 0.15
+loss_given_default    = 0.90
+
+TN (good approved)     -> + loan * margin
+TP (default rejected)  ->   0
+FP (good rejected)     -> - loan * margin       (lost margin)
+FN (default approved)  -> - loan * LGD
+```
+
+### Results (corrected protocol)
+
+| Quantity                              | Value           |
+| ------------------------------------- | --------------- |
+| Optimal threshold t* (chosen on selection fold) | 0.25  |
+| Test profit at t*                     | $0              |
+| Test profit at t = 0.5 (default)      | -$363,000       |
+| **Improvement on test fold**          | **$363,000**    |
+| Per-loan improvement                  | $181.50 / loan  |
+| 95% bootstrap CI on improvement       | $159,000 to $579,000 |
+| Test rejection rate at t*             | 24.3%           |
+| False rejections at t* (good loans rejected) | 290     |
+| Approved loan volume at t*            | $15.15M         |
+| Default rate on approved book at t*   | 11.6%           |
+
+Sensitivity to cost assumptions (chosen on selection fold,
+evaluated on test fold):
+
+| Scenario     | margin | LGD  | t*   | test profit  | 95% CI                 |
+| ------------ | ------ | ---- | ---- | -----------  | ---------------------  |
+| Conservative | 10%    | 95%  | 0.19 | -$310,500    | [-$543,038, -$99,938]  |
+| Base         | 15%    | 90%  | 0.25 |       $0     | [-$265,537, $250,500]  |
+| Aggressive   | 20%    | 80%  | 0.34 |  $776,000    | [$495,950, $1,032,100] |
+
+### Key findings
+
+- A held-out threshold-selection fold reduces the headline number
+  from the in-sample $489,000 reported by the original protocol to
+  $363,000 (95% CI $159K to $579K) on data the threshold sweep did
+  not see.
+- The 95% CI on the *improvement* is tighter than the CI on the
+  raw test profit because the same bootstrap sample fixes both
+  terms in the difference.
+- Threshold relocation under the base cost regime moves the
+  decision rule from losing $363K (at t = 0.5) to breaking even
+  (at t = 0.25), not from break-even to a $489K profit.
+- All numbers are computed on the synthetic Forage dataset and
+  inherit its limitations.
+
 
 ---
 
