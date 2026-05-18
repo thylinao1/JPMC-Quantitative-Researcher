@@ -1,15 +1,12 @@
-# JPMorgan Chase Quantitative Research Portfolio
+# JPMorgan Chase Quantitative Research (Forage virtual experience)
 
-Quantitative modeling projects completed as part of JPMorgan Chase's virtual experience program. This portfolio demonstrates end-to-end quantitative research methodology: from data quality assessment through model development to business impact analysis.
+Three modelling projects completed against the synthetic datasets and task specifications from the JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the data and the prompts; the modelling, evaluation protocol, and code are this repository's contribution.
 
-## Executive Summary
+## Summary
 
-Three interconnected projects addressing core quantitative finance challenges:
-1. **Credit Risk**: Default probability modeling with economic decision optimization
-2. **Score Quantization**: Optimal bucketing algorithms with statistical validation
-3. **Commodities Trading**: Price forecasting and reinforcement learning for trading strategy
-
-Central theme: rigorous methodology over impressive metrics. Each project includes honest assessment of data limitations and focuses on demonstrating sound quantitative reasoning.
+1. **Credit Risk**: probability-of-default model on a synthetic retail loan dataset with held-out threshold selection and a bootstrap CI on the test-fold improvement.
+2. **Score Quantisation**: optimal FICO bucketing by log-likelihood maximisation (greedy vs dynamic programming) with bootstrap CIs on the chosen boundaries.
+3. **Commodities Trading**: a seasonal price model plus tabular Q-learning for storage trading, with a chronological train/test split and explicit baselines (buy-and-hold, seasonal swing). The agent's in-sample advantage does not transfer out of sample; this is reported as the result.
 
 ---
 
@@ -107,14 +104,20 @@ Results for 7 buckets:
 - DP LL: -4229.60
 - Gap: 13.14 (greedy found local optimum)
 
-**Bootstrap Confidence Intervals**
+**Bootstrap confidence intervals**
 
-50 bootstrap samples reveal boundary instability:
-- Boundary 1: 513 [493, 522]
-- Boundary 3: 583 [561, 611] (±25 points)
-- Boundary 4: 614 [586, 648] (±31 points)
+Bootstrap (100 resamples) on the 7-bucket optimal boundaries (these are the numbers printed by the notebook):
 
-Middle boundaries have substantial uncertainty, suggesting optimal configuration is sensitive to sample composition.
+| Boundary | Point | 95% CI       |
+| -------- | ----- | ------------ |
+| 1        | 513   | [494, 535]   |
+| 2        | 553   | [526, 580]   |
+| 3        | 585   | [553, 611]   |
+| 4        | 617   | [608, 644]   |
+| 5        | 655   | [638, 694]   |
+| 6        | 715   | [690, 740]   |
+
+Middle boundaries have substantial uncertainty, suggesting the optimal configuration is sensitive to sample composition.
 
 **Monotonicity Analysis**
 
@@ -235,33 +238,25 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 ## Repository Structure
 
 ```
-├── Risk_Estimation.ipynb           # Credit default prediction
-│   ├── Data diagnostics
-│   ├── Model comparison
-│   ├── Calibration analysis
-│   ├── SHAP explainability
-│   └── Profit optimization
-│
-├── Bucket_FICO_scores.ipynb        # Score quantization
-│   ├── Log-likelihood framework
-│   ├── Greedy vs DP optimization
-│   ├── Bootstrap confidence intervals
-│   ├── Monotonicity enforcement
-│   └── Information value analysis
-│
-├── JPMC_Gas_Contracts.ipynb        # Commodities pricing + RL
-│   ├── Time series forecasting
-│   ├── Contract valuation
-│   ├── Q-learning implementation
-│   ├── Policy visualization
-│   └── Strategy comparison
-│
-└── README.md                        # This file
+.
+├── Risk Estimation-5.ipynb         # Credit default prediction
+├── Bucket FICO scores-5.ipynb      # FICO bucketing
+├── JPMC Gas Contracts-2.ipynb      # Gas pricing and storage RL
+├── src/                            # Importable modules (Phase 2 onward)
+│   ├── credit/                     # data loader, profit/threshold eval, operational profile
+│   └── gas/                        # data loader, baselines, env, q-learning
+├── tests/                          # pytest unit tests for src/
+├── Nat_Gas.csv                     # gas price series (not committed)
+├── Task 3 and 4_Loan_Data.csv      # loan data (not committed)
+└── README_6.md                     # this file
 ```
+
+Notebook filenames and the README file name retain their inherited form
+in this phase; a structural rename happens in Phase 3.
 
 ---
 
-## Limitations and Honest Assessment
+## Limitations
 
 ### Data Limitations
 - **Credit Risk**: Synthetic dataset with unrealistic feature relationships. Results demonstrate methodology, not production performance.
@@ -326,10 +321,8 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 
 ## About This Project
 
-This portfolio was completed as part of JPMorgan Chase's Quantitative Research virtual experience program. The program provides specifications and synthetic datasets; the implementation, analysis, and extensions are original work.
+JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the task specifications and the synthetic datasets. The modelling code, evaluation protocol, and analysis text in this repository are this project's contribution.
 
 ---
 
-*Last Updated: November 2024*
-
-*Virtual experience program - datasets provided were synthetic/simplified for educational purposes*
+*Last updated: 2026-05-18 (Phase 2 audit).*
