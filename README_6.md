@@ -149,86 +149,103 @@ Monotonic WoE confirms good risk separation for scorecard development.
 ## Project 3: Natural Gas Storage Contracts
 
 ### Objective
-Value storage contracts allowing seasonal arbitrage (inject during low-price summer, withdraw during high-price winter) and optimize trading strategy.
+
+Value storage contracts allowing seasonal arbitrage (inject during
+low-price summer, withdraw during high-price winter) and evaluate
+whether a tabular Q-learning agent can improve on simple heuristic
+trading rules.
 
 ### Price Forecasting
 
-**Model Specification**
+**Model**
+
 ```
-f(t) = a + bt + ct² + d·sin(2πt/12) + e·cos(2πt/12)
+f(t) = a + b*t + c*t^2 + d*sin(2 pi t / 12) + e*cos(2 pi t / 12)
 ```
 
-Components:
-- Linear trend: captures long-term price movement
-- Quadratic term: allows for acceleration/deceleration
-- Sine/cosine: seasonal pattern with 12-month period
-
-Fitted on 48 months of historical data (Oct 2020 - Sep 2024).
-
-**Residual Analysis**
-- RMSE calculated for model fit
-- Residuals examined for patterns
-- Model captures seasonal structure (winter peaks, summer troughs)
+Components: linear trend, quadratic curvature, and a 12-month
+seasonal sinusoid. Fitted on the 48 monthly observations in
+`Nat_Gas.csv` (October 2020 through September 2024). Used by the
+`get_price_for_date` helper for interpolation on arbitrary days.
 
 ### Contract Valuation
 
-Standard NPV calculation:
+Standard NPV with strict volume constraints:
+
 ```
-Contract Value = Σ(Withdrawal Revenue) - Σ(Injection Costs) - Storage Fees
+Contract Value = sum(withdrawal_revenue) - sum(injection_cost) - storage_fee
 ```
 
-Volume constraints enforced:
-- Inventory ≥ 0 at all times
-- Inventory ≤ maximum capacity
-- Validation prevents over-injection or impossible withdrawals
+The `volume_checker` function enforces `0 <= inventory <= capacity`
+at every transaction date and rejects schedules that would breach
+either bound.
 
-### Reinforcement Learning for Optimal Timing
+### Reinforcement Learning for Storage Trading
 
-**Problem Formulation**
+**Code under `src/gas/`.** Three modules with unit tests under
+`tests/test_gas_*.py`:
 
-State space: (inventory_level, time_period)
-- Inventory: 0 to 100 units (discretized by 10)
-- Time: 48 monthly periods
+- `src.gas.baselines` defines `buy_and_hold_profit` and
+  `seasonal_swing_profit`, plus the shared `DEFAULT_STORAGE_COST`
+  ($0.05 per unit per month). This constant is the single source of
+  truth used by both heuristics and by the env, so a comparison
+  cannot quietly use a different cost on each side.
+- `src.gas.env.GasStorageEnv` is the MDP. Illegal actions
+  (`withdraw` at zero inventory, `inject` at full capacity) become
+  no-op `hold` actions and return `illegal=True` in the info dict
+  rather than silently passing through.
+- `src.gas.qlearning` separates training and evaluation. `train`
+  takes a price series, an env config, and a `QLearningConfig`
+  (deterministic seed, linear epsilon decay 0.3 -> 0.05 over
+  episodes). `evaluate` rolls the greedy policy on a separate
+  price series so out-of-sample reporting is possible.
 
-Action space: {hold, inject, withdraw}
+**Evaluation protocol**
 
-Reward function:
-- Inject: -price × volume (cost)
-- Withdraw: +price × volume (revenue)
-- Storage cost: -inventory × rate per period
-- Terminal: liquidate remaining inventory
+Chronological 24/24 split on the 48-month series:
 
-**Q-Learning Implementation**
+- Train window: October 2020 through September 2022.
+- Test window: October 2022 through September 2024.
 
-Parameters:
-- Learning rate (α): 0.1
-- Discount factor (γ): 0.99
-- Exploration rate (ε): 0.3
-- Episodes: 5,000
+Both windows cover a full annual cycle so the seasonal-swing baseline
+is well defined on each side.
 
-Algorithm learns state-action value function Q(s, a) through temporal difference updates.
+**Results (per 10-unit position, storage cost included)**
 
-**Results**
+| Window               | Buy-and-hold | Seasonal swing | Q-learning |
+| -------------------- | ------------ | -------------- | ---------- |
+| Train (in-sample)    | -$4.50       | $15.10         | $27.10     |
+| Test (held out)      | -$3.50       | $16.00         | $1.50      |
 
-Naive strategy (single seasonal cycle):
-- Buy in summer (low price): $9.84/MMBtu
-- Sell in winter (high price): $10.30/MMBtu
-- Profit: $2.60 per 10 units
+Buy-and-hold is negative on both windows because the modest 24-month
+price drift does not cover the per-month carrying cost on 10 units.
+On the training window the Q-learning agent outperforms the seasonal
+swing by roughly 1.8x. On the held-out window the advantage
+disappears: the seasonal swing produces $16.00 while the trained
+agent produces $1.50.
 
-RL optimal strategy:
-- Exploits multiple price cycles
-- Builds inventory before uptrends (months 20-25)
-- Liquidates after peaks
-- Total profit: $101.93
+**Interpretation**
 
-**Improvement: 39x over naive approach**
-
-The agent discovers that multiple small arbitrage opportunities compound to far exceed single seasonal trade.
+The in-sample improvement does not generalise. A tabular Q with
+time as part of the state can memorise "do X at time t" on the
+training series, and that memorised policy is brittle when the next
+year's price path differs. This is the expected failure mode of the
+formulation, and it is what the held-out window measures. Phase 5
+revisits the formulation (state without raw time index, sliding-window
+evaluation, deep Q-networks for continuous control) as an explicit
+methodology improvement; this section documents the baseline result
+before any of those changes.
 
 ### Findings
-- Sequential optimization outperforms static rules
-- RL naturally discovers multi-cycle trading patterns
-- Price forecasting + decision optimization is more powerful than forecasting alone
+
+- A chronological train/test split is necessary for any non-trivial
+  claim about a trading agent; without one, the headline number is
+  in-sample.
+- The simplest defensible baseline (one annual seasonal swing) is a
+  high bar on a small dataset.
+- The corrected per-unit storage cost convention is shared between
+  the env and the baselines so the comparison is on equal footing.
+
 
 ---
 
@@ -256,7 +273,7 @@ The agent discovers that multiple small arbitrage opportunities compound to far 
 │   ├── Policy visualization
 │   └── Strategy comparison
 │
-└── README.md                        # This file
+└── README_6.md                      # This file (renamed to README.md in Phase 3)
 ```
 
 ---
