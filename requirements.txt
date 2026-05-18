@@ -1,0 +1,16 @@
+# Tested with Python 3.10 - 3.12. Major-version pinned for stability.
+pandas>=2.0,<3
+numpy>=1.24,<3
+scikit-learn>=1.3,<2
+scipy>=1.10,<2
+matplotlib>=3.7,<4
+seaborn>=0.12,<1
+xgboost>=2.0,<4
+shap>=0.43,<1
+
+# Dev / notebook execution
+pytest>=7,<10
+nbformat>=5,<6
+nbconvert>=7,<8
+ipykernel>=6,<7
+jupyter>=1,<2

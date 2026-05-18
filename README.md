@@ -1,3 +1,5 @@
+[![CI](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml/badge.svg)](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml)
+
 # JPMorgan Chase Quantitative Research (Forage virtual experience)
 
 Three modelling projects completed against the synthetic datasets and task specifications from the JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the data and the prompts; the modelling, evaluation protocol, and code are this repository's contribution.
@@ -7,6 +9,34 @@ Three modelling projects completed against the synthetic datasets and task speci
 1. **Credit Risk**: probability-of-default model on a synthetic retail loan dataset with held-out threshold selection and a bootstrap CI on the test-fold improvement.
 2. **Score Quantisation**: optimal FICO bucketing by log-likelihood maximisation (greedy vs dynamic programming) with bootstrap CIs on the chosen boundaries.
 3. **Commodities Trading**: a seasonal price model plus tabular Q-learning for storage trading, with a chronological train/test split and explicit baselines (buy-and-hold, seasonal swing). The agent's in-sample advantage does not transfer out of sample; this is reported as the result.
+
+## Installation
+
+Requires Python 3.10 or newer.
+
+```bash
+git clone https://github.com/thylinao1/JPMC-Quantitative-Researcher.git
+cd JPMC-Quantitative-Researcher
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+## Reproduce
+
+```bash
+# Run the test suite (47 tests).
+pytest
+
+# Execute every notebook end-to-end against the committed CSVs.
+for nb in notebooks/*.ipynb; do
+    jupyter nbconvert --to notebook --execute --inplace "$nb"
+done
+```
+
+The notebooks discover the repo root automatically (via a small
+`pyproject.toml`-lookup in the first cell), so they run from any
+working directory.
+
 
 ---
 
@@ -316,54 +346,52 @@ before any of those changes.
 ## Repository Structure
 
 ```
-├── Risk_Estimation.ipynb           # Credit default prediction
-│   ├── Data diagnostics
-│   ├── Model comparison
-│   ├── Calibration analysis
-│   ├── SHAP explainability
-│   └── Profit optimization
-│
-├── Bucket_FICO_scores.ipynb        # Score quantization
-│   ├── Log-likelihood framework
-│   ├── Greedy vs DP optimization
-│   ├── Bootstrap confidence intervals
-│   ├── Monotonicity enforcement
-│   └── Information value analysis
-│
-├── JPMC_Gas_Contracts.ipynb        # Commodities pricing + RL
-│   ├── Time series forecasting
-│   ├── Contract valuation
-│   ├── Q-learning implementation
-│   ├── Policy visualization
-│   └── Strategy comparison
-│
-└── README_6.md                      # This file (renamed to README.md in Phase 3)
-```
-
-Notebook filenames and the README file name retain their inherited form
-in this phase; a structural rename happens in Phase 3.
+.
+├── README.md
+├── LICENSE
+├── pyproject.toml
+├── requirements.txt
+├── .github/workflows/ci.yml
+├── data/
+│   ├── README.md            # describes both CSVs
+│   ├── Nat_Gas.csv          # monthly gas price series (Project 3)
+│   └── loan_data.csv        # synthetic loan portfolio (Projects 1, 2)
+├── notebooks/
+│   ├── 01_credit_risk.ipynb
+│   ├── 02_fico_bucketing.ipynb
+│   └── 03_gas_storage.ipynb
+├── src/
+│   ├── credit/              # loader, profit/threshold eval, operational profile
+│   └── gas/                 # loader, baselines, env, q-learning
+└── tests/                   # 47 pytest tests covering src/
 
 ---
 
 ## Limitations
 
-### Data Limitations
-- **Credit Risk**: Synthetic dataset with unrealistic feature relationships. Results demonstrate methodology, not production performance.
-- **Gas Pricing**: Only 48 months of data limits forecast reliability. Extrapolation uncertainty not quantified.
-- **FICO Bucketing**: Same synthetic credit data. Boundaries would differ on real population.
+### Data
+- The loan dataset is synthetic. Headline numbers are illustrations of
+  the methodology, not estimates of production performance.
+- The 48-month gas series limits any forecast or trading claim to its
+  observed sample.
+- The FICO bucketing inherits the same synthetic credit data; the
+  optimal boundaries would differ on a real population.
 
-### Model Limitations
-- **No temporal validation**: Credit model uses random split, not time-ordered. Real deployment requires out-of-time testing.
-- **Deterministic RL**: Gas trading assumes perfect price knowledge. Production would need stochastic price modeling.
-- **No transaction costs**: Gas RL ignores bid-ask spreads, market impact, and operational constraints.
-- **Simplified state space**: Discrete inventory levels lose granularity of continuous control.
+### Model and evaluation
+- The credit model uses a stratified random split rather than a time
+  ordered one; real deployment requires out-of-time testing.
+- The Q-learning state includes the raw time index, which makes the
+  agent vulnerable to memorising the training trajectory. The
+  out-of-sample number reported in Project 3 is this exact failure
+  mode and is the reason the in-sample improvement does not transfer.
+- The gas RL formulation assumes perfect price knowledge during
+  rollouts and ignores transaction costs, bid-ask spreads, and
+  operational constraints.
 
-### What These Projects Don't Show
-- Real-time data integration
-- Model monitoring and drift detection
-- Regulatory compliance (Basel III capital calculations)
-- Stress testing under adverse scenarios
-- Production deployment considerations
+### Out of scope
+- Real-time data integration, model monitoring, regulatory capital
+  (Basel III), stress testing, fairness and bias analysis, production
+  deployment.
 
 ---
 
