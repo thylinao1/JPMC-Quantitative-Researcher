@@ -2,7 +2,9 @@
 
 # JPMorgan Chase Quantitative Research (Forage virtual experience)
 
-Three modelling projects completed against the synthetic datasets and task specifications from the JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the data and the prompts; the modelling, evaluation protocol, and code are this repository's contribution.
+Three modelling projects built against the synthetic datasets and task specifications from the JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the data and the prompts; the modelling, evaluation protocol, and code in this repository are independent work.
+
+**Source:** [J.P. Morgan Quantitative Research on Forage](https://www.theforage.com/simulations/jpmorgan/quantitative-research-11oc)
 
 ## Summary
 
@@ -70,10 +72,10 @@ modelling regime.
 
 - Logistic Regression: 0.783 AUC (+/- 0.013)
 - Random Forest: 0.729 AUC (+/- 0.010)
-- XGBoost: 0.740 AUC (+/- 0.012)
+- XGBoost: 0.730 AUC (+/- 0.011)
 
 A paired t-test on the 5-fold AUC differences (LR vs XGBoost)
-gives p = 0.0004. Logistic regression wins on this restricted
+gives p = 0.0003. Logistic regression wins on this restricted
 feature set.
 
 **Calibration (Brier)**
@@ -90,10 +92,10 @@ risk).
 
 **Economic decision optimisation: three-way split**
 
-The original analysis swept thresholds on the same test fold that
-produced the headline profit number, which selects the empirically
-best operating point and reports its in-sample profit. The
-corrected protocol uses a three-way stratified split:
+Threshold selection on the same data that produces the headline
+profit number selects the empirically best operating point on that
+data and reports its in-sample value. The protocol used here is a
+three-way stratified split:
 
 - Train (60%, n = 6000): fit the logistic regression.
 - Threshold-select (20%, n = 2000): sweep thresholds and pick the
@@ -117,7 +119,7 @@ FP (good rejected)     -> - loan * margin       (lost margin)
 FN (default approved)  -> - loan * LGD
 ```
 
-### Results (corrected protocol)
+### Results
 
 | Quantity                              | Value           |
 | ------------------------------------- | --------------- |
@@ -143,16 +145,14 @@ evaluated on test fold):
 
 ### Key findings
 
-- A held-out threshold-selection fold reduces the headline number
-  from the in-sample $489,000 reported by the original protocol to
-  $363,000 (95% CI $159K to $579K) on data the threshold sweep did
-  not see.
-- The 95% CI on the *improvement* is tighter than the CI on the
-  raw test profit because the same bootstrap sample fixes both
-  terms in the difference.
-- Threshold relocation under the base cost regime moves the
-  decision rule from losing $363K (at t = 0.5) to breaking even
-  (at t = 0.25), not from break-even to a $489K profit.
+- On the held-out test fold the threshold chosen on the selection
+  fold yields a $363,000 improvement over the default 0.5 cutoff
+  (95% CI $159K to $579K).
+- The 95% CI on the improvement is tighter than the CI on the raw
+  test profit because the same bootstrap sample fixes both terms
+  in the difference.
+- Under the base cost regime the decision rule moves from a
+  $363K expected loss at t = 0.5 to roughly break-even at t = 0.25.
 - All numbers are computed on the synthetic Forage dataset and
   inherit its limitations.
 
@@ -197,7 +197,7 @@ Results for 7 buckets:
 
 **Bootstrap confidence intervals**
 
-Bootstrap (100 resamples) on the 7-bucket optimal boundaries (these are the numbers printed by the notebook):
+Bootstrap (50 resamples) on the 7-bucket optimal boundaries (these are the numbers printed by the notebook):
 
 | Boundary | Point | 95% CI       |
 | -------- | ----- | ------------ |
@@ -219,10 +219,6 @@ Middle boundaries have substantial uncertainty, suggesting the optimal configura
 - Bucket 9: 37.50% default rate (small sample anomaly)
 
 Conclusion: More granularity introduces instability without improving discrimination.
-
-**Model Selection (AIC/BIC)**
-
-Both AIC and BIC select 7 buckets as optimal, balancing fit against complexity.
 
 **Information Value**
 
@@ -324,11 +320,10 @@ The in-sample improvement does not generalise. A tabular Q with
 time as part of the state can memorise "do X at time t" on the
 training series, and that memorised policy is brittle when the next
 year's price path differs. This is the expected failure mode of the
-formulation, and it is what the held-out window measures. Phase 5
-revisits the formulation (state without raw time index, sliding-window
-evaluation, deep Q-networks for continuous control) as an explicit
-methodology improvement; this section documents the baseline result
-before any of those changes.
+formulation, and it is what the held-out window measures.
+Reasonable next steps include dropping the raw time index from the
+state, sliding-window evaluation, and moving to a deep Q-network
+for continuous control of inventory.
 
 ### Findings
 
@@ -337,8 +332,8 @@ before any of those changes.
   in-sample.
 - The simplest defensible baseline (one annual seasonal swing) is a
   high bar on a small dataset.
-- The corrected per-unit storage cost convention is shared between
-  the env and the baselines so the comparison is on equal footing.
+- The per-unit storage cost convention is shared between the env
+  and the baselines so the comparison is on equal footing.
 
 
 ---
@@ -364,14 +359,16 @@ before any of those changes.
 │   ├── credit/              # loader, profit/threshold eval, operational profile
 │   └── gas/                 # loader, baselines, env, q-learning
 └── tests/                   # 47 pytest tests covering src/
+```
 
 ---
 
 ## Limitations
 
 ### Data
-- The loan dataset is synthetic. Headline numbers are illustrations of
-  the methodology, not estimates of production performance.
+- The loan dataset is synthetic. Headline dollar amounts come from
+  this synthetic data and inherit its limitations; they are not
+  estimates of production performance.
 - The 48-month gas series limits any forecast or trading claim to its
   observed sample.
 - The FICO bucketing inherits the same synthetic credit data; the
@@ -442,4 +439,4 @@ JPMorgan Chase Quantitative Research virtual experience program on Forage. The p
 
 ---
 
-*Last updated: 2026-05-18 (Phase 2 audit).*
+*Last updated: 2026-05-18.*

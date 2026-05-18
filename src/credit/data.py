@@ -1,10 +1,9 @@
 """Loaders and splits for the credit-risk dataset.
 
-The training/threshold-selection/test split is the single most
-important methodology fix in this module: the original notebook
-chose the optimal classification threshold on the same data it
-reported the headline profit on. The three-way split closes that
-leakage path.
+The training/threshold-selection/test split keeps threshold tuning
+out of the data the headline profit is reported on, which is the
+only way to avoid selecting the empirically best operating point
+on the same fold that scores it.
 """
 
 from __future__ import annotations
