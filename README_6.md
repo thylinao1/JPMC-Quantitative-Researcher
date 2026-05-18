@@ -13,58 +13,119 @@ Three modelling projects completed against the synthetic datasets and task speci
 ## Project 1: Credit Risk Modeling
 
 ### Objective
-Build probability of default (PD) model for retail loan portfolio and translate ML predictions into business decisions.
+
+Build a probability-of-default model on the Forage retail loan
+dataset, then translate the probabilities into a credit-approval
+threshold under an asymmetric cost matrix. Report the value of the
+threshold relocation on a held-out test fold (not on the fold used
+to pick the threshold).
 
 ### Data Assessment
-Initial analysis revealed critical issue: dataset is synthetic and trivially separable.
-- Simple logistic regression achieves 1.0000 AUC (perfect discrimination)
-- `credit_lines_outstanding` correlates 0.86 with default (unrealistic)
-- Real-world credit models typically achieve 0.65-0.75 AUC
 
-Rather than ignoring this, the analysis proceeds on two tracks:
-1. Full features: demonstrates synthetic nature
-2. Restricted features (income, FICO, employment, loan amount): yields realistic 0.78 AUC
+The full dataset is trivially separable:
+
+- Simple logistic regression achieves 1.0000 AUC on all features.
+- `credit_lines_outstanding` correlates 0.86 with default.
+- Real-world credit models typically achieve 0.65 to 0.75 AUC.
+
+This is consistent with a synthetic dataset designed for an
+educational program. The notebook documents the diagnosis and
+restricts the feature set to `income`, `years_employed`,
+`fico_score`, `loan_amt_outstanding` to obtain a more realistic
+modelling regime.
 
 ### Methodology
 
-**Model Comparison with Statistical Testing**
-- Logistic Regression: 0.783 AUC (±0.013)
-- Random Forest: 0.729 AUC (±0.010)
-- XGBoost: 0.740 AUC (±0.012)
+**Model comparison with paired t-test on CV folds**
 
-Paired t-test confirms logistic regression superiority (p=0.0004). Simpler model wins when relationships are linear and features are limited.
+- Logistic Regression: 0.783 AUC (+/- 0.013)
+- Random Forest: 0.729 AUC (+/- 0.010)
+- XGBoost: 0.740 AUC (+/- 0.012)
 
-**Calibration Analysis**
-- Brier score: 0.126
-- Calibration curve tracks diagonal well
-- Slight underconfidence in 0.3-0.5 probability range
-- Critical for credit risk: poorly calibrated models lead to mispriced loans
+A paired t-test on the 5-fold AUC differences (LR vs XGBoost)
+gives p = 0.0004. Logistic regression wins on this restricted
+feature set.
+
+**Calibration (Brier)**
+
+Brier score on the LR model: 0.126. The calibration curve tracks
+the diagonal with slight underconfidence in the 0.3 to 0.5 region.
 
 **Explainability (SHAP)**
-- FICO score: highest impact
-- Years employed: second highest
-- All feature effects economically coherent (higher FICO → lower risk)
 
-**Economic Decision Optimization**
+LinearExplainer on the LR model. FICO score has the largest
+average absolute SHAP value; loan amount has the next largest.
+Directional effects are economically coherent (higher FICO -> lower
+risk).
 
-Key insight: ML optimization (AUC) ≠ business optimization (profit)
+**Economic decision optimisation: three-way split**
 
-Cost assumptions:
-- Loan amount: $10,000
-- Profit margin on good loan: 15%
-- Loss given default: 90%
+The original analysis swept thresholds on the same test fold that
+produced the headline profit number, which selects the empirically
+best operating point and reports its in-sample profit. The
+corrected protocol uses a three-way stratified split:
 
-Results:
-- Default threshold (0.50): -$354,000 expected profit
-- Optimal threshold (0.19): +$135,000 expected profit
-- Improvement: $489,000
+- Train (60%, n = 6000): fit the logistic regression.
+- Threshold-select (20%, n = 2000): sweep thresholds and pick the
+  one that maximises profit on this fold alone.
+- Final test (20%, n = 2000): report profit at the chosen
+  threshold. No threshold tuning touches this fold.
 
-Sensitivity analysis shows optimal threshold ranges from 0.18 to 0.34 depending on cost assumptions.
+The split, profit function, threshold optimiser, and bootstrap CIs
+live under `src/credit/` with unit tests at `tests/test_credit_*.py`.
 
-### Key Findings
-- Simpler models can outperform complex ones on limited features
-- Classification threshold optimization is as important as model selection
-- Calibration matters as much as discrimination for risk pricing
+**Cost convention (single source of truth, used by `src.credit.eval`)**
+
+```
+loan_amount           = $10,000
+profit_margin         = 0.15
+loss_given_default    = 0.90
+
+TN (good approved)     -> + loan * margin
+TP (default rejected)  ->   0
+FP (good rejected)     -> - loan * margin       (lost margin)
+FN (default approved)  -> - loan * LGD
+```
+
+### Results (corrected protocol)
+
+| Quantity                              | Value           |
+| ------------------------------------- | --------------- |
+| Optimal threshold t* (chosen on selection fold) | 0.25  |
+| Test profit at t*                     | $0              |
+| Test profit at t = 0.5 (default)      | -$363,000       |
+| **Improvement on test fold**          | **$363,000**    |
+| Per-loan improvement                  | $181.50 / loan  |
+| 95% bootstrap CI on improvement       | $159,000 to $579,000 |
+| Test rejection rate at t*             | 24.3%           |
+| False rejections at t* (good loans rejected) | 290     |
+| Approved loan volume at t*            | $15.15M         |
+| Default rate on approved book at t*   | 11.6%           |
+
+Sensitivity to cost assumptions (chosen on selection fold,
+evaluated on test fold):
+
+| Scenario     | margin | LGD  | t*   | test profit  | 95% CI                 |
+| ------------ | ------ | ---- | ---- | -----------  | ---------------------  |
+| Conservative | 10%    | 95%  | 0.19 | -$310,500    | [-$543,038, -$99,938]  |
+| Base         | 15%    | 90%  | 0.25 |       $0     | [-$265,537, $250,500]  |
+| Aggressive   | 20%    | 80%  | 0.34 |  $776,000    | [$495,950, $1,032,100] |
+
+### Key findings
+
+- A held-out threshold-selection fold reduces the headline number
+  from the in-sample $489,000 reported by the original protocol to
+  $363,000 (95% CI $159K to $579K) on data the threshold sweep did
+  not see.
+- The 95% CI on the *improvement* is tighter than the CI on the
+  raw test profit because the same bootstrap sample fixes both
+  terms in the difference.
+- Threshold relocation under the base cost regime moves the
+  decision rule from losing $363K (at t = 0.5) to breaking even
+  (at t = 0.25), not from break-even to a $489K profit.
+- All numbers are computed on the synthetic Forage dataset and
+  inherit its limitations.
+
 
 ---
 
@@ -152,103 +213,131 @@ Monotonic WoE confirms good risk separation for scorecard development.
 ## Project 3: Natural Gas Storage Contracts
 
 ### Objective
-Value storage contracts allowing seasonal arbitrage (inject during low-price summer, withdraw during high-price winter) and optimize trading strategy.
+
+Value storage contracts allowing seasonal arbitrage (inject during
+low-price summer, withdraw during high-price winter) and evaluate
+whether a tabular Q-learning agent can improve on simple heuristic
+trading rules.
 
 ### Price Forecasting
 
-**Model Specification**
+**Model**
+
 ```
-f(t) = a + bt + ct² + d·sin(2πt/12) + e·cos(2πt/12)
+f(t) = a + b*t + c*t^2 + d*sin(2 pi t / 12) + e*cos(2 pi t / 12)
 ```
 
-Components:
-- Linear trend: captures long-term price movement
-- Quadratic term: allows for acceleration/deceleration
-- Sine/cosine: seasonal pattern with 12-month period
-
-Fitted on 48 months of historical data (Oct 2020 - Sep 2024).
-
-**Residual Analysis**
-- RMSE calculated for model fit
-- Residuals examined for patterns
-- Model captures seasonal structure (winter peaks, summer troughs)
+Components: linear trend, quadratic curvature, and a 12-month
+seasonal sinusoid. Fitted on the 48 monthly observations in
+`Nat_Gas.csv` (October 2020 through September 2024). Used by the
+`get_price_for_date` helper for interpolation on arbitrary days.
 
 ### Contract Valuation
 
-Standard NPV calculation:
+Standard NPV with strict volume constraints:
+
 ```
-Contract Value = Σ(Withdrawal Revenue) - Σ(Injection Costs) - Storage Fees
+Contract Value = sum(withdrawal_revenue) - sum(injection_cost) - storage_fee
 ```
 
-Volume constraints enforced:
-- Inventory ≥ 0 at all times
-- Inventory ≤ maximum capacity
-- Validation prevents over-injection or impossible withdrawals
+The `volume_checker` function enforces `0 <= inventory <= capacity`
+at every transaction date and rejects schedules that would breach
+either bound.
 
-### Reinforcement Learning for Optimal Timing
+### Reinforcement Learning for Storage Trading
 
-**Problem Formulation**
+**Code under `src/gas/`.** Three modules with unit tests under
+`tests/test_gas_*.py`:
 
-State space: (inventory_level, time_period)
-- Inventory: 0 to 100 units (discretized by 10)
-- Time: 48 monthly periods
+- `src.gas.baselines` defines `buy_and_hold_profit` and
+  `seasonal_swing_profit`, plus the shared `DEFAULT_STORAGE_COST`
+  ($0.05 per unit per month). This constant is the single source of
+  truth used by both heuristics and by the env, so a comparison
+  cannot quietly use a different cost on each side.
+- `src.gas.env.GasStorageEnv` is the MDP. Illegal actions
+  (`withdraw` at zero inventory, `inject` at full capacity) become
+  no-op `hold` actions and return `illegal=True` in the info dict
+  rather than silently passing through.
+- `src.gas.qlearning` separates training and evaluation. `train`
+  takes a price series, an env config, and a `QLearningConfig`
+  (deterministic seed, linear epsilon decay 0.3 -> 0.05 over
+  episodes). `evaluate` rolls the greedy policy on a separate
+  price series so out-of-sample reporting is possible.
 
-Action space: {hold, inject, withdraw}
+**Evaluation protocol**
 
-Reward function:
-- Inject: -price × volume (cost)
-- Withdraw: +price × volume (revenue)
-- Storage cost: -inventory × rate per period
-- Terminal: liquidate remaining inventory
+Chronological 24/24 split on the 48-month series:
 
-**Q-Learning Implementation**
+- Train window: October 2020 through September 2022.
+- Test window: October 2022 through September 2024.
 
-Parameters:
-- Learning rate (α): 0.1
-- Discount factor (γ): 0.99
-- Exploration rate (ε): 0.3
-- Episodes: 5,000
+Both windows cover a full annual cycle so the seasonal-swing baseline
+is well defined on each side.
 
-Algorithm learns state-action value function Q(s, a) through temporal difference updates.
+**Results (per 10-unit position, storage cost included)**
 
-**Results**
+| Window               | Buy-and-hold | Seasonal swing | Q-learning |
+| -------------------- | ------------ | -------------- | ---------- |
+| Train (in-sample)    | -$4.50       | $15.10         | $27.10     |
+| Test (held out)      | -$3.50       | $16.00         | $1.50      |
 
-Naive strategy (single seasonal cycle):
-- Buy in summer (low price): $9.84/MMBtu
-- Sell in winter (high price): $10.30/MMBtu
-- Profit: $2.60 per 10 units
+Buy-and-hold is negative on both windows because the modest 24-month
+price drift does not cover the per-month carrying cost on 10 units.
+On the training window the Q-learning agent outperforms the seasonal
+swing by roughly 1.8x. On the held-out window the advantage
+disappears: the seasonal swing produces $16.00 while the trained
+agent produces $1.50.
 
-RL optimal strategy:
-- Exploits multiple price cycles
-- Builds inventory before uptrends (months 20-25)
-- Liquidates after peaks
-- Total profit: $101.93
+**Interpretation**
 
-**Improvement: 39x over naive approach**
-
-The agent discovers that multiple small arbitrage opportunities compound to far exceed single seasonal trade.
+The in-sample improvement does not generalise. A tabular Q with
+time as part of the state can memorise "do X at time t" on the
+training series, and that memorised policy is brittle when the next
+year's price path differs. This is the expected failure mode of the
+formulation, and it is what the held-out window measures. Phase 5
+revisits the formulation (state without raw time index, sliding-window
+evaluation, deep Q-networks for continuous control) as an explicit
+methodology improvement; this section documents the baseline result
+before any of those changes.
 
 ### Findings
-- Sequential optimization outperforms static rules
-- RL naturally discovers multi-cycle trading patterns
-- Price forecasting + decision optimization is more powerful than forecasting alone
+
+- A chronological train/test split is necessary for any non-trivial
+  claim about a trading agent; without one, the headline number is
+  in-sample.
+- The simplest defensible baseline (one annual seasonal swing) is a
+  high bar on a small dataset.
+- The corrected per-unit storage cost convention is shared between
+  the env and the baselines so the comparison is on equal footing.
+
 
 ---
 
 ## Repository Structure
 
 ```
-.
-├── Risk Estimation-5.ipynb         # Credit default prediction
-├── Bucket FICO scores-5.ipynb      # FICO bucketing
-├── JPMC Gas Contracts-2.ipynb      # Gas pricing and storage RL
-├── src/                            # Importable modules (Phase 2 onward)
-│   ├── credit/                     # data loader, profit/threshold eval, operational profile
-│   └── gas/                        # data loader, baselines, env, q-learning
-├── tests/                          # pytest unit tests for src/
-├── Nat_Gas.csv                     # gas price series (not committed)
-├── Task 3 and 4_Loan_Data.csv      # loan data (not committed)
-└── README_6.md                     # this file
+├── Risk_Estimation.ipynb           # Credit default prediction
+│   ├── Data diagnostics
+│   ├── Model comparison
+│   ├── Calibration analysis
+│   ├── SHAP explainability
+│   └── Profit optimization
+│
+├── Bucket_FICO_scores.ipynb        # Score quantization
+│   ├── Log-likelihood framework
+│   ├── Greedy vs DP optimization
+│   ├── Bootstrap confidence intervals
+│   ├── Monotonicity enforcement
+│   └── Information value analysis
+│
+├── JPMC_Gas_Contracts.ipynb        # Commodities pricing + RL
+│   ├── Time series forecasting
+│   ├── Contract valuation
+│   ├── Q-learning implementation
+│   ├── Policy visualization
+│   └── Strategy comparison
+│
+└── README_6.md                      # This file (renamed to README.md in Phase 3)
 ```
 
 Notebook filenames and the README file name retain their inherited form
