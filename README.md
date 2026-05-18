@@ -156,6 +156,55 @@ evaluated on test fold):
 - All numbers are computed on the synthetic Forage dataset and
   inherit its limitations.
 
+### Additional methodology
+
+Three additions strengthen the soundness of the headline numbers
+without changing the underlying model. Code lives under
+`src/credit/{metrics,calibration,generalisation}.py` with unit
+tests at `tests/test_credit_*.py`.
+
+**Bootstrap 95% CIs on the headline metrics (test fold, 2000 resamples):**
+
+| Metric    | Point  | 95% CI             |
+| --------- | ------ | ------------------ |
+| AUC       | 0.7827 | [0.7575, 0.8062]   |
+| Brier     | 0.1259 | [0.1164, 0.1358]   |
+| Recall    | 0.5270 | [0.4774, 0.5803]   |
+| Precision | 0.4021 | [0.3600, 0.4475]   |
+| F1        | 0.4561 | [0.4147, 0.4994]   |
+
+**Calibration: raw LR vs isotonic (test fold):**
+
+| Probability series | ECE    | Brier  |
+| ------------------ | ------ | ------ |
+| Raw LR             | 0.0216 | 0.1259 |
+| Isotonic (CV=5)    | 0.0282 | 0.1262 |
+
+The base logistic regression is already well calibrated on the
+restricted feature set. Post-hoc isotonic fitting on small CV
+folds adds variance and does not reduce miscalibration on this
+data: a useful negative result.
+
+**Cohort generalisation (tenure-based split):**
+
+The dataset has no time column, so the split uses `years_employed`
+as a monotone proxy. Train on customers with
+`years_employed >= 3` (n = 9,116, default rate 16.5%); evaluate on
+customers with `years_employed < 3` (n = 884, default rate 39.1%).
+
+| Cohort               | t*   | Profit       | Per loan   |
+| -------------------- | ---- | ------------ | ---------- |
+| Long-tenure (train)  | 0.21 | $1,393,500   |  $152.86   |
+| Short-tenure (test)  | 0.21 | -$639,000    | -$722.85   |
+
+The model trained on long-tenure customers does not transfer:
+per-loan profit drops by $876 and total profit on the short-tenure
+cohort is -$639,000. The short-tenure cohort has a 2.4x higher base
+default rate; the model fit on the long-tenure population cannot
+recover this through the same t* and the operating point breaks
+down (90.0% rejection rate, 458 false rejections out of 796
+rejections).
+
 
 ---
 
