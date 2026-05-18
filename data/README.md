@@ -1,10 +1,9 @@
 # Data
 
-Both files in this directory are the synthetic datasets supplied by the
-JPMorgan Chase Quantitative Research virtual experience program on
-Forage. They are committed here so that `git clone` + the install
-instructions in the top-level README are enough to run every notebook
-end-to-end.
+Both files in this directory are the synthetic datasets supplied by
+the JPMorgan Chase & Forage Quantitative Research program. They are
+committed here so that `git clone` + the install instructions in the
+top-level README are enough to run every notebook end-to-end.
 
 ## `loan_data.csv`
 

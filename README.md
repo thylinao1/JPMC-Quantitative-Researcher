@@ -1,8 +1,8 @@
 [![CI](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml/badge.svg)](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml)
 
-# JPMorgan Chase Quantitative Research (JPMorgan Chase & Forage program)
+# JPMorgan Chase & Forage Quantitative Research
 
-Three modelling projects built against the synthetic datasets and task specifications from the JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the data and the prompts; the modelling, evaluation protocol, and code in this repository are independent work.
+Three modelling projects built against the synthetic datasets and task specifications from the JPMorgan Chase & Forage Quantitative Research program. The program supplies the data and the prompts; the modelling, evaluation protocol, and code in this repository are independent work.
 
 **Source:** [J.P. Morgan Quantitative Research on Forage](https://www.theforage.com/simulations/jpmorgan/quantitative-research-11oc)
 
@@ -484,7 +484,7 @@ for continuous control of inventory.
 
 ## About This Project
 
-JPMorgan Chase Quantitative Research virtual experience program on Forage. The program supplies the task specifications and the synthetic datasets. The modelling code, evaluation protocol, and analysis text in this repository are this project's contribution.
+JPMorgan Chase & Forage Quantitative Research program. The program supplies the task specifications and the synthetic datasets. The modelling code, evaluation protocol, and analysis text in this repository are this project's contribution.
 
 ---
 
