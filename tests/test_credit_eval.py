@@ -95,7 +95,7 @@ def test_bootstrap_profit_ci_contains_point_estimate():
         probs, labels, threshold=0.5, loan_amount=LOAN,
         margin=MARGIN, lgd=LGD, n_boot=500, seed=0,
     )
-    # The point estimate should lie inside the CI (it must — it's
+    # The point estimate must lie inside the CI: it is the
     # the unbootstrapped value, and the CI is symmetric quantiles).
     assert out["lo"] <= out["point"] <= out["hi"]
     assert out["lo"] < out["hi"]

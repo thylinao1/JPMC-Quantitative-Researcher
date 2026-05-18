@@ -1,9 +1,8 @@
 """Profit and threshold evaluation for the credit-risk model.
 
-A single ``profit_at_threshold`` function is the source of truth for
-the cost matrix. Every other function in this module (and the
-notebook) calls it instead of recomputing the formula. The cost
-convention follows the original notebook:
+A single ``profit_at_threshold`` function is the source of truth
+for the cost matrix; every other function in this module and every
+notebook call route through it. The cost convention:
 
     TN: good loan approved   -> + loan_amount * margin
     FN: defaulter approved   -> - loan_amount * lgd
