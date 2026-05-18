@@ -1,4 +1,42 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.installed.cfg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# pytest
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# IDEs / editors
+.vscode/
+.idea/
+*.swp
+.spyderproject
+.spyproject
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Project-specific
+# (data/ IS committed; raw downloads landing in repo root are not)
+/Nat_Gas.csv
+/Task 3 and 4_Loan_Data.csv
+/Task*Loan_Data.csv
