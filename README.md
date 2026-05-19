@@ -1,6 +1,6 @@
 [![CI](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml/badge.svg)](https://github.com/thylinao1/JPMC-Quantitative-Researcher/actions/workflows/ci.yml)
 
-# JPMorgan Chase & Forage Quantitative Research
+# Quantitative Research Project
 
 Three modelling projects built against the synthetic datasets and task specifications from the JPMorgan Chase & Forage Quantitative Research program. The program supplies the data and the prompts; the modelling, evaluation protocol, and code in this repository are independent work.
 
