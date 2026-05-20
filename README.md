@@ -10,7 +10,7 @@ Three modelling projects built against the synthetic datasets and task specifica
 
 1. **Credit Risk**: probability-of-default model on a synthetic retail loan dataset with held-out threshold selection and a bootstrap CI on the test-fold improvement.
 2. **Score Quantisation**: optimal FICO bucketing by log-likelihood maximisation (greedy vs dynamic programming) with bootstrap CIs on the chosen boundaries.
-3. **Commodities Trading**: a seasonal price model plus tabular Q-learning for storage trading, with a chronological train/test split and explicit baselines (buy-and-hold, seasonal swing). The agent's in-sample advantage does not transfer out of sample; this is reported as the result.
+3. **Reinforcement Learning**: gas storage framed as a finite-horizon inventory-control MDP, solved with tabular Q-learning under a chronological train/test split against two heuristic baselines. The agent's in-sample advantage does not transfer to the held-out window; the generalisation failure mode is the reported result.
 
 ## Installation
 
@@ -285,14 +285,19 @@ Monotonic WoE confirms good risk separation for scorecard development.
 
 ---
 
-## Project 3: Natural Gas Storage Contracts
+## Project 3: Tabular Q-Learning for Gas Storage Control
 
 ### Objective
 
-Value storage contracts allowing seasonal arbitrage (inject during
-low-price summer, withdraw during high-price winter) and evaluate
-whether a tabular Q-learning agent can improve on simple heuristic
-trading rules.
+Frame gas storage as a finite-horizon inventory-control MDP: at each
+monthly step the agent holds, injects, or withdraws, subject to a
+capacity constraint and a per-unit carrying cost. The question is
+not how much money the policy makes; it is whether a tabular
+Q-learning agent generalises beyond the window it was trained on.
+The contribution is the evaluation protocol and the failure-mode
+diagnosis. A parametric price model and a contract-valuation helper
+are included because the source program specifies them, but the
+methodological focus is the reinforcement-learning agent.
 
 ### Price Forecasting
 
@@ -319,7 +324,7 @@ The `volume_checker` function enforces `0 <= inventory <= capacity`
 at every transaction date and rejects schedules that would breach
 either bound.
 
-### Reinforcement Learning for Storage Trading
+### Reinforcement Learning: Tabular Q-Learning
 
 **Code under `src/gas/`.** Three modules with unit tests under
 `tests/test_gas_*.py`:
@@ -377,8 +382,8 @@ for continuous control of inventory.
 ### Findings
 
 - A chronological train/test split is necessary for any non-trivial
-  claim about a trading agent; without one, the headline number is
-  in-sample.
+  claim about a learned control policy; without one, the reported
+  number is in-sample and rewards memorisation.
 - The simplest defensible baseline (one annual seasonal swing) is a
   high bar on a small dataset.
 - The per-unit storage cost convention is shared between the env
@@ -418,7 +423,7 @@ for continuous control of inventory.
 - The loan dataset is synthetic. Headline dollar amounts come from
   this synthetic data and inherit its limitations; they are not
   estimates of production performance.
-- The 48-month gas series limits any forecast or trading claim to its
+- The 48-month gas series limits any forecast or policy claim to its
   observed sample.
 - The FICO bucketing inherits the same synthetic credit data; the
   optimal boundaries would differ on a real population.
