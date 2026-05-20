@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 ## Reproduce
 
 ```bash
-# Run the test suite (47 tests).
+# Run the test suite (82 tests).
 pytest
 
 # Execute every notebook end-to-end against the committed CSVs.
@@ -160,7 +160,7 @@ evaluated on test fold):
 
 Three additions strengthen the soundness of the headline numbers
 without changing the underlying model. Code lives under
-`src/credit/{metrics,calibration,generalisation}.py` with unit
+`src/credit/{metrics,calibration,generalisation,mitigation}.py` with unit
 tests at `tests/test_credit_*.py`.
 
 **Bootstrap 95% CIs on the headline metrics (test fold, 2000 resamples):**
@@ -204,6 +204,38 @@ default rate; the model fit on the long-tenure population cannot
 recover this through the same t* and the operating point breaks
 down (90.0% rejection rate, 458 false rejections out of 796
 rejections).
+
+**Mitigating the cohort failure.**
+
+Two standard responses to the failure are implemented in
+`src/credit/mitigation.py` and evaluated on a held-out half of the
+short-tenure cohort (n = 442):
+
+| Rule                                  | Test profit | Per loan |
+| ------------------------------------- | ----------- | -------- |
+| Baseline (long-cohort t*, base model) | -$325,500   | -$736.43 |
+| Importance-weighted model             | -$325,500   | -$736.43 |
+| Cohort-adaptive threshold             | -$274,500   | -$621.04 |
+| Importance weighting + adaptive t*    | -$289,500   | -$654.98 |
+| Oracle (best possible threshold)      | -$274,500   | -$621.04 |
+| Reject the cohort outright            | $0          | $0.00    |
+
+Covariate-shift importance weighting (a domain classifier
+estimates `p_short(x) / p_long(x)`, the model is refit with those
+weights) recovers nothing. The diagnostic explains why: the
+long-trained model still holds an AUC of about 0.75 on the short
+cohort, so the failure is not a ranking problem a covariate-shift
+correction can fix. Cohort-adaptive thresholding (re-pick t* on the
+short cohort's own dev split) recovers $51,000 and exactly equals
+the oracle, so it extracts the most any threshold can.
+
+The cohort is structurally loss-making: the oracle still loses
+$274,500 and reject-all ($0) beats every classifier rule. At a 39%
+base default rate and a 90% loss given default, no threshold and no
+reweighting makes the short-tenure book profitable. The break-even
+margin is 45%, three times the 15% base regime. The correct
+mitigation is a unit-economics decision, declining or repricing the
+cohort, not retuning the model.
 
 
 ---
@@ -405,9 +437,9 @@ for continuous control of inventory.
 │   ├── 02_fico_bucketing.ipynb
 │   └── 03_gas_storage.ipynb
 ├── src/
-│   ├── credit/              # loader, profit/threshold eval, operational profile
+│   ├── credit/              # loaders, eval, calibration, generalisation, mitigation
 │   └── gas/                 # loader, baselines, env, q-learning
-└── tests/                   # 47 pytest tests covering src/
+└── tests/                   # 82 pytest tests covering src/
 ```
 
 ---
