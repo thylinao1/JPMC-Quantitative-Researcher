@@ -27,9 +27,9 @@ EXPECTED_COLUMNS = (
     "default",
 )
 
-# Subset of features used in the "restricted" track. The original
-# notebook adopted this subset after diagnosing the full-feature
-# model as trivially separable on the synthetic dataset.
+# Subset of features used in the "restricted" track: the full feature
+# set is trivially separable on this synthetic dataset, so the
+# analysis restricts to these four for a realistic modelling regime.
 RESTRICTED_FEATURES = (
     "income",
     "years_employed",
